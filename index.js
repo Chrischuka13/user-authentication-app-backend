@@ -8,14 +8,31 @@ import profileRouter from "./middleware/profile.js"
 const PORT = process.env.PORT || 5000 
 const app = express()
 
-app.use(cors({
-    origin: process.env.domain,
+const allowedOrigins = [
+  "http://localhost:5174",
+  process.env.domain
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE"]
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
+
 
 
 app.use("/api/auth", profileRouter)
