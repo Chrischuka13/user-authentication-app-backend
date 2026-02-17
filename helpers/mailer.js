@@ -27,6 +27,8 @@ export const sendEmail = async({email, emailType, userId}) => {
         
         const transport = nodemailer.createTransport({
         service: "gmail",
+        port: process.env.EMAIL_PORT,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
@@ -35,6 +37,9 @@ export const sendEmail = async({email, emailType, userId}) => {
         //     rejectUnauthorized: false,
         // }
         });
+        await transport.verify();
+        console.log("SMTP server ready");
+
 
         const actionUrl = emailType === "VERIFY"? `${process.env.domain}/verifymail/${resetToken}` : `${process.env.domain}/resetpassword/${resetToken}`;
         
@@ -46,9 +51,15 @@ export const sendEmail = async({email, emailType, userId}) => {
             <br> ${actionUrl}</p>`
         }
 
-        const mailResponse = await transport.sendMail(mailOptions) 
+        try {
+            const mailResponse = await transport.sendMail(mailOptions);
+            console.log("Email sent:", mailResponse.response);
+            return mailResponse;
+        } catch (error) {
+            console.error("Email error:", error);
+            throw error;
+        }
 
-        return mailResponse;
         
     } catch (error) {
         throw error instanceof Error 
