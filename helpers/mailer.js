@@ -26,17 +26,17 @@ export const sendEmail = async({email, emailType, userId}) => {
 
         
         const transport = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || "smtp.mailtrap.io",
+        service: "gmail",
         port: process.env.EMAIL_PORT,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        tls: {
-            rejectUnauthorized: false,
-        }
+        // tls: {
+        //     rejectUnauthorized: false,
+        // }
         });
-
 
         const actionUrl = emailType === "VERIFY"? `${process.env.domain}/verifymail/${resetToken}` : `${process.env.domain}/resetpassword/${resetToken}`;
         
@@ -48,15 +48,9 @@ export const sendEmail = async({email, emailType, userId}) => {
             <br> ${actionUrl}</p>`
         }
 
-        try {
-            const mailResponse = await transport.sendMail(mailOptions);
-            console.log("Email sent:", mailResponse.response);
-            return mailResponse;
-        } catch (error) {
-            console.error("Email error:", error);
-            throw error;
-        }
+        const mailResponse = await transport.sendMail(mailOptions) 
 
+        return mailResponse;
         
     } catch (error) {
         throw error instanceof Error 
