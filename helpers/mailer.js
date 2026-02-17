@@ -1,6 +1,9 @@
-import nodemailer from "nodemailer"
 import crypto from "crypto"
 import User from "../models/user.js"
+import sgMail from "@sendgrid/mail"
+
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export const sendEmail = async({email, emailType, userId}) => {
     try {
@@ -24,46 +27,22 @@ export const sendEmail = async({email, emailType, userId}) => {
         resetPasswordExpires: Date.now() + 3600000}) //1hr
         }
 
-        
-        const transport = nodemailer.createTransport({
-        service: "gmail",
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        },
-        // tls: {
-        //     rejectUnauthorized: false,
-        // }
-        });
-        await transport.verify();
-        console.log("SMTP server ready");
-
 
         const actionUrl = emailType === "VERIFY"? `${process.env.domain}/verifymail/${resetToken}` : `${process.env.domain}/resetpassword/${resetToken}`;
         
-        const mailOptions = {
-            from: `"Chuka's Auth-Project": ${process.env.EMAIL_USER}`,
+        const msg = {
+            from: `"Chuka's Auth-Project": ${process.env.EMAIL_FROM}`,
             to: email,
             subject: emailType === "VERIFY"? "Verify your email" : "Reset your password",
             html: `<p>Click <a href="${actionUrl}">here</a> to ${emailType === "VERIFY" ? "verify your email" : "reset your password"} or copy and paste the link below in your browser.
             <br> ${actionUrl}</p>`
         }
 
-        try {
-            const mailResponse = await transport.sendMail(mailOptions);
-            console.log("Email sent:", mailResponse.response);
-            return mailResponse;
-        } catch (error) {
-            console.error("Email error:", error);
-            throw error;
-        }
-
+        await sgMail.send(msg);
         
     } catch (error) {
         throw error instanceof Error 
-        ? error : new Error("Unknown error occurred");
+        ? error : new Error("SendGrid Error");
 }
 
 }
