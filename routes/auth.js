@@ -46,8 +46,8 @@ router.post('/signup', async (req, res) => {
         })
 
     } catch (err) {
-        console.error("SignUp API error", err.message);
-        res.status(500).json({message: "server error"})
+        console.error("SignUp API error", err);
+        res.status(500).json({message: err.message})
         
     }
 });
